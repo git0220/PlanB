@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>クンポーツアー 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: #fff;
+  color: #111;
+  font-family: 'Cormorant Garamond', serif;
+  overflow-x: hidden;
+}
+
+/* ── Ken Burns ── */
+@keyframes kb-zoom-out  { from { transform: scale(1.12) translate(2%,1%);  } to { transform: scale(1.0) translate(0%,0%);   } }
+@keyframes kb-zoom-in   { from { transform: scale(1.0)  translate(0%,0%);  } to { transform: scale(1.12) translate(-2%,-1%); } }
+@keyframes kb-pan-right { from { transform: scale(1.1)  translate(-3%,0%); } to { transform: scale(1.08) translate(3%,0%);   } }
+@keyframes kb-pan-left  { from { transform: scale(1.1)  translate(3%,0%);  } to { transform: scale(1.08) translate(-3%,0%);  } }
+
+/* ── REVEAL ── */
+.r {
+  opacity: 0;
+  transform: translateY(28px) scale(0.98);
+  transition: opacity 1s cubic-bezier(.16,.8,.24,1), transform 1s cubic-bezier(.16,.8,.24,1);
+}
+.r.in { opacity: 1; transform: none; }
+.r.d1 { transition-delay: .15s; }
+.r.d2 { transition-delay: .3s; }
+
+/* ── OVERLAP STAGE ── */
+.overlap-stage {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  background: #000;
+}
+.overlap-stage .slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2.2s ease;
+}
+.overlap-stage .slide img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  animation: kb-zoom-out 18s ease-out forwards;
+}
+.overlap-stage .slide.active { opacity: 1; }
+.black-slide {
+  background: #0a0a0a !important;
+}
+.overlap-overlay {
+  position: absolute; inset: 0; z-index: 5;
+  background: rgba(0,0,0,.3);
+  pointer-events: none;
+}
+.overlap-text {
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  transform: translateY(-50%);
+  z-index: 10;
+  text-align: center;
+  padding: 0 6vw;
+  color: #fff;
+  pointer-events: none;
+}
+.overlap-text h1 {
+  font-weight: 300;
+  font-size: clamp(1.5rem, 4.5vw, 3rem);
+  letter-spacing: .04em;
+  line-height: 1.35;
+  text-shadow: 0 1px 20px rgba(0,0,0,.4);
+}
+.overlap-text h1 em {
+  display: block;
+  font-style: italic;
+  font-size: .52em;
+  color: rgba(255,255,255,.6);
+  margin-top: .4em;
+  letter-spacing: .08em;
+}
+.overlap-text .meta {
+  margin-top: 1.2em;
+  font-size: clamp(.58rem, 1.4vw, .75rem);
+  letter-spacing: .3em;
+  color: rgba(255,255,255,.38);
+}
+.scroll-line {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 1px; height: 5svh;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,.45));
+  z-index: 10;
+}
+
+/* ── DAY BREAK ── */
+.day-break {
+  height: 100svh;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+}
+.day-break .num {
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(6rem, 22vw, 15rem);
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -.02em;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 2.4s cubic-bezier(.16,.8,.24,1), transform 2.4s cubic-bezier(.16,.8,.24,1);
+}
+.day-break .lbl {
+  font-weight: 300;
+  font-size: clamp(.65rem, 1.6vw, .85rem);
+  letter-spacing: .5em;
+  color: rgba(255,255,255,.3);
+  text-indent: .5em;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 2s ease .5s, transform 2s ease .5s;
+}
+.day-break.in .num,
+.day-break.in .lbl { opacity: 1; transform: none; }
+
+/* ── RECORD GRID ── */
+.rec {
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  position: relative;
+  opacity: 0;
+  transform: translateY(32px) scale(0.97);
+  transition: opacity 1s cubic-bezier(.16,.8,.24,1), transform 1s cubic-bezier(.16,.8,.24,1);
+}
+.rec.in { opacity: 1; transform: none; }
+.rec img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.12);
+}
+.rec.in img             { animation: kb-zoom-out  5s ease-out forwards; }
+.rec.in.kb1 img         { animation: kb-zoom-in   5s ease-out forwards; }
+.rec.in.kb2 img         { animation: kb-pan-right 6s ease-in-out forwards; }
+.rec.in.kb3 img         { animation: kb-pan-left  6s ease-in-out forwards; }
+.rec:hover img          { animation: none; transform: scale(1.06); transition: transform 6s ease; }
+
+.rg   { display: grid; gap: 4px; }
+.rg-1 { grid-template-columns: 1fr; }
+.rg-2 { grid-template-columns: 1fr 1fr; }
+.rg-21{ grid-template-columns: 2fr 1fr; }
+.rg-12{ grid-template-columns: 1fr 2fr; }
+
+/* ── WHISPER ── */
+.whisper { padding: 14vw 0; text-align: center; }
+.whisper span {
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.1rem, 3vw, 1.8rem);
+  letter-spacing: .06em;
+  color: rgba(17,17,17,.28);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 1.8s ease, transform 1.8s ease;
+}
+.whisper.in span { opacity: 1; transform: none; }
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  .rg-2, .rg-21, .rg-12 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ OPENING ══ -->
+<section class="overlap-stage" id="opening">
+  <div class="slide active"><img src="images/1.jpg" alt="" style="object-position:center 30%"></div>
+  <div class="slide"><img src="images/2.jpg" alt="" style="object-position:72% 28%;transform:scale(1.35)"></div>
+  <div class="slide"><img src="images/4.jpg" alt=""></div>
+  <div class="slide"><img src="images/3.jpg" alt="" style="object-position:center 40%"></div>
+  <div class="slide"><img src="images/5.jpg" alt="" style="object-position:center 20%"></div>
+  <div class="overlap-overlay"></div>
+  <div class="overlap-text">
+    <h1>クンポーツアー 2026<em>岩手の歴史・文化・食を楽しむ１泊２日</em></h1>
+    <div class="meta">JUNE 27 – 28, 2026 &nbsp;|&nbsp; IWATE, JAPAN</div>
+  </div>
+  <div class="scroll-line"></div>
+</section>
+
+<!-- ══ DAY 1 ══ -->
+<div class="day-break r" id="day1"><div class="num">1</div><div class="lbl">DAY ONE</div></div>
+
+<div class="rg rg-1"><div class="rec kb0 r"><img src="images/d11.jpg" alt=""></div></div>
+<div class="whisper r"><span>ニックネームはこういち</span></div>
+<div class="rg rg-2"><div class="rec kb1 r"><img src="images/d12.jpg" alt="" style="object-position:center 40%"></div><div class="rec kb2 r d1"><img src="images/d13.jpg" alt=""></div></div>
+<div class="whisper r"><span>風鈴はご近所迷惑</span></div>
+<div class="rg rg-12"><div class="rec kb3 r"><img src="images/d14.jpg" alt=""></div><div class="rec kb0 r d1"><img src="images/d15.jpg" alt="" style="object-position:center 35%"></div></div>
+<div class="rg rg-1"><div class="rec kb1 r"><img src="images/d16.jpg" alt=""></div></div>
+
+<!-- ══ DAY 2 ══ -->
+<div class="day-break r" id="day2"><div class="num">2</div><div class="lbl">DAY TWO</div></div>
+
+<div class="rg rg-1"><div class="rec kb2 r"><img src="images/d21.jpg" alt="" style="object-position:center 55%"></div></div>
+<div class="whisper r"><span>残響 = 50"</span></div>
+<div class="rg rg-2"><div class="rec kb3 r"><img src="images/d22.jpg" alt=""></div><div class="rec kb0 r d1"><img src="images/d24.jpg" alt="" style="object-position:center 20%"></div></div>
+<div class="whisper r"><span>弁慶 = 186cm</span></div>
+<div class="rg rg-21"><div class="rec kb1 r"><img src="images/d25.jpg" alt=""></div><div class="rec kb2 r d1"><img src="images/d26.jpg" alt=""></div></div>
+
+<!-- ══ CLOSING ══ -->
+<section class="overlap-stage r" id="closing-stage">
+  <div class="slide black-slide active"></div>
+  <div class="slide"><img src="images/l3.jpg" alt="" style="object-position:center 35%"></div>
+  <div class="slide"><img src="images/l1.jpg" alt="" style="object-position:center 40%"></div>
+  <div class="slide"><img src="images/l2.jpg" alt=""></div>
+  <div class="slide"><img src="images/l4.jpg" alt="" style="object-position:center 40%"></div>
+  <div class="overlap-overlay"></div>
+  <div class="overlap-text" id="closing-text">
+    <h1 style="font-style:italic;font-weight:300">Until next trip.</h1>
+    <div class="meta" style="margin-top:1.6em;letter-spacing:.45em">2026</div>
+  </div>
+</section>
+
+<script>
+// Overlap slideshow
+function startOverlap(stageId, interval, onLastCallback) {
+  const stage = document.getElementById(stageId);
+  if (!stage) return;
+  const slides = stage.querySelectorAll('.slide');
+  let cur = 0;
+  const timer = setInterval(() => {
+    slides[cur].classList.remove('active');
+    cur = (cur + 1) % slides.length;
+    slides[cur].classList.add('active');
+    if (onLastCallback && cur === slides.length - 1) {
+      onLastCallback();
+      clearInterval(timer);
+    }
+  }, interval);
+}
+
+// Opening starts immediately
+startOverlap('opening', 3200);
+
+// Closing starts only when it enters the viewport
+let closingStarted = false;
+const closingIo = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !closingStarted) {
+      closingStarted = true;
+      // 黒ベタだけ短め(1.8s)、以降は通常(3600ms)でループ
+      const stage = document.getElementById('closing-stage');
+      const slides = stage.querySelectorAll('.slide');
+      let cur = 0;
+      function next(interval) {
+        setTimeout(() => {
+          slides[cur].classList.remove('active');
+          cur = (cur + 1) % slides.length;
+          slides[cur].classList.add('active');
+          next(cur === 0 ? 1800 : 3600);
+        }, interval);
+      }
+      next(1800);
+    }
+  });
+}, { threshold: 0.3 });
+const closingEl = document.getElementById('closing-stage');
+if (closingEl) closingIo.observe(closingEl);
+
+// Reveal
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.r, .rec, .whisper, .day-break').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
